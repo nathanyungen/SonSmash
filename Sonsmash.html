@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sonsmash</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .game-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        .pet-card {
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            padding: 15px;
+            width: 280px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .pet-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .pet-card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Sonsmash</h1>
+    <h1>Vote for the Guy!</h1>
+
+    <div class="game-container">
+        <div class="pet-card" id="left-card" onclick="vote(0)">
+            <h2 id="left-name">Loading...</h2>
+            <img id="left-img" src="" alt="Person Left">
+            <p>Rating: <span id="left-rating">1200</span></p>
+        </div>
+
+        <div class="pet-card" id="right-card" onclick="vote(1)">
+            <h2 id="right-name">Loading...</h2>
+            <img id="right-img" src="" alt="Person Right">
+            <p>Rating: <span id="right-rating">1200</span></p>
+        </div>
+    </div>
+
+<script>
+    // Only reset if it's the absolute first time the user visits version 2
+    if (!localStorage.getItem('petScores_v2')) {
+        localStorage.removeItem('petScores'); // Clear old format
+        localStorage.setItem('petScores_v2', 'true');
+    }
+
+    const defaultPets = [
+        { id: 1, name: "Sonnie Blue", rating: 1200, image: "SonnieBlue.png" },
+        { id: 2, name: "Sonset", rating: 1200, image: "Sonset.png" },
+        { id: 3, name: "Honeybun", rating: 1200, image: "SoneyBun.png" },
+        { id: 4, name: "Kim Son Un", rating: 1200, image: "SonJongUn.png" },
+        { id: 5, name: "Sonald Trump", rating: 1200, image: "SonaldTrump.png" },
+        { id: 6, name: "Dwayne The Rock JohnSon", rating: 1200, image: "TheRockJohnson.png" }
+    ];
+
+    let pets = JSON.parse(localStorage.getItem('petScores')) || defaultPets;
+    let currentLeftPet = null;
+    let currentRightPet = null;
+    const K = 32;
+
+    function pickMatchup() {
+        if (pets.length < 2) return;
+
+        let index1 = Math.floor(Math.random() * pets.length);
+        let index2 = Math.floor(Math.random() * pets.length);
+
+        while (index1 === index2) {
+            index2 = Math.floor(Math.random() * pets.length);
+        }
+
+        currentLeftPet = pets[index1];
+        currentRightPet = pets[index2];
+
+        document.getElementById("left-name").innerText = currentLeftPet.name;
+        document.getElementById("left-img").src = currentLeftPet.image;
+        document.getElementById("left-rating").innerText = currentLeftPet.rating;
+
+        document.getElementById("right-name").innerText = currentRightPet.name;
+        document.getElementById("right-img").src = currentRightPet.image;
+        document.getElementById("right-rating").innerText = currentRightPet.rating;
+    }
+
+    function vote(winnerSide) {
+        let winner = winnerSide === 0 ? currentLeftPet : currentRightPet;
+        let loser = winnerSide === 0 ? currentRightPet : currentLeftPet;
+
+        let R_W = winner.rating;
+        let R_L = loser.rating;
+
+        let E_W = 1 / (1 + Math.pow(10, (R_L - R_W) / 400));
+        let E_L = 1 / (1 + Math.pow(10, (R_W - R_L) / 400));
+
+        winner.rating = Math.round(R_W + K * (1 - E_W));
+        loser.rating = Math.round(R_L + K * (0 - E_L));
+
+        localStorage.setItem('petScores', JSON.stringify(pets));
+        pickMatchup();
+    }
+
+    window.onload = pickMatchup;
+</script>
+</body>
+</html>
